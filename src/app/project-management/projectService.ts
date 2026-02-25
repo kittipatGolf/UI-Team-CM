@@ -14,15 +14,46 @@ export type CheckFormSummaryItem = {
   progressPercentage: number;
 };
 
+export type UnitStatusDetail = {
+  unitId: string;
+  unitNo: string;
+
+  buildPhaseId: string;
+  buildPhaseName: string;
+
+  floorBlockId: string;
+  floorBlockName: string;
+  floorBlockNumber: string;
+  floorType: string;
+
+  maxActiveCheckFormOrder: number;
+  maxActiveCheckFormId: string | null;
+  maxActiveCheckFormName: string | null;
+  maxActiveCheckFormStatus: string | null;
+
+  statusColor: string;
+  overallStatus: string;
+
+  completedCheckLists: number;
+  inProgressCheckForms: number;
+  completedCheckForms: number;
+  totalCheckLists: number;
+
+  hasDefect: boolean;
+  typeChecking: "unit" | "area" | string;
+};
+
 export type ProjectSummary = {
   projectId: string;
   projectName: string;
   totalUnits: number;
   totalCheckForms: number;
   checkFormSummary: CheckFormSummaryItem[];
+  unitStatusDetails: UnitStatusDetail[];
 };
 
-export async function fetchProjectSummary(projectId?: string) {
-  const qs = projectId ? `?projectId=${encodeURIComponent(projectId)}` : "";
-  return apiGet<ProjectSummary>(`/api/mock/project${qs}`);
+const ENDPOINT = "/mock-project.json";
+
+export async function fetchProjectSummary(_projectId?: string) {
+  return apiGet<ProjectSummary>(ENDPOINT);
 }

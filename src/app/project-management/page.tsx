@@ -8,6 +8,8 @@ import PageHeader from "./component/PageHeader";
 import UnitMatrixTabs from "./component/UnitMatrixTabs";
 import InspectionTabs from "./component/InspectionTabs";
 import SummaryTable, { type SummaryRow } from "./component/SummaryTable";
+import InspectionColor from "./component/InspectionColor";
+import UnitMatrixBoard from "./component/UnitMatrixBoard";
 
 import { fetchProjectSummary, type ProjectSummary } from "./projectService";
 
@@ -17,16 +19,26 @@ function avgProgress(items: { progressPercentage: number }[]) {
 }
 
 export default function Page() {
+  const projectId = "69280c5366b642274141d391";
+
   const [data, setData] = useState<ProjectSummary | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProjectSummary("69280c5366b642274141d391")
+    fetchProjectSummary(projectId)
       .then(setData)
-      .catch((e) => setError(e?.message ?? "Failed to load"));
-  }, []);
+      .catch(() => { });
+  }, [projectId]);
 
-  // ✅ map จาก mock -> SummaryRow
+  const legendForms = useMemo(() => {
+    if (!data?.checkFormSummary?.length) return [];
+    const sorted = [...data.checkFormSummary].sort((a, b) => a.order - b.order);
+    return sorted.map((x, idx) => ({
+      order: idx + 1,
+      checkFormName: x.checkFormName,
+      color: x.color,
+    }));
+  }, [data]);
+
   const summaryRow: SummaryRow | null = useMemo(() => {
     if (!data) return null;
 
@@ -37,7 +49,6 @@ export default function Page() {
       (x) => x.order >= 6 && x.order <= 17
     );
 
-    // mock remaining: ถ้ามี roomItems ใช้ notStartedUnits ของตัวแรก
     const remaining = roomItems.length > 0 ? roomItems[0].notStartedUnits : 0;
 
     return {
@@ -47,6 +58,10 @@ export default function Page() {
       roomPct: avgProgress(roomItems),
       remaining,
     };
+  }, [data]);
+
+  const boardUnits = useMemo(() => {
+    return data?.unitStatusDetails ?? [];
   }, [data]);
 
   return (
@@ -66,17 +81,12 @@ export default function Page() {
 
           <div className="flex w-full flex-col items-start gap-4 rounded-lg bg-white p-8">
             <InspectionTabs />
-            {error ? (
-              <div className="w-full rounded-md bg-red-50 p-4 text-[14px] text-red-700">
-                {error}
-              </div>
-            ) : !summaryRow ? (
-              <div className="w-full rounded-md bg-slate-50 p-4 text-[14px] text-slate-700">
-                Loading...
-              </div>
-            ) : (
-              <SummaryTable row={summaryRow} />
-            )}
+
+            {summaryRow && <SummaryTable row={summaryRow} />}
+
+            <InspectionColor projectId={projectId} checkForms={legendForms} />
+
+            {boardUnits.length > 0 && <UnitMatrixBoard units={boardUnits} />}
           </div>
         </div>
       </div>

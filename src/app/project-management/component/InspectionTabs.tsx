@@ -49,10 +49,10 @@ export default function InspectionTabs({ value, onChange }: Props) {
             type="button"
             onClick={() => setActive(t.key)}
             className={[
-              "h-10 whitespace-nowrap rounded-md border px-4 text-[14px] font-normal transition",
+              "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-[#184777] text-white border-[#184777]"
-                : "bg-white text-slate-900 border-slate-300 hover:bg-[#184777] hover:text-white hover:border-[#184777]",
+                ? "bg-[#184777] text-white border-[#184777] hover:bg-[#184777] hover:border-[#184777]"
+                : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100 hover:border-gray-300",
             ].join(" ")}
           >
             {t.label}
