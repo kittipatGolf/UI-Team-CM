@@ -66,8 +66,7 @@ export default function Page() {
 
   return (
     <>
-      <Navbar />
-      <SubNav />
+      <Navbar subNav={<SubNav />}/>
 
       <div className="flex-1 bg-[#f3f4f6] pt-8">
         <PageHeader
