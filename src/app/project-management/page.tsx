@@ -66,7 +66,7 @@ export default function Page() {
 
   return (
     <>
-      <Navbar subNav={<SubNav />}/>
+      <Navbar subNav={<SubNav/>} />
 
       <div className="flex-1 bg-[#f3f4f6] pt-8">
         <PageHeader
@@ -85,7 +85,12 @@ export default function Page() {
 
             <InspectionColor projectId={projectId} checkForms={legendForms} />
 
-            {boardUnits.length > 0 && <UnitMatrixBoard units={boardUnits} />}
+            {boardUnits.length > 0 && (
+              <UnitMatrixBoard
+                units={boardUnits}
+                checkFormColors={legendForms}
+              />
+            )}
           </div>
         </div>
       </div>

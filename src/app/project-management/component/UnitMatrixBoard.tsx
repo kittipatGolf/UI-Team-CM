@@ -2,6 +2,7 @@ import type { UnitStatusDetail } from "../projectService";
 
 type Props = {
   units: UnitStatusDetail[];
+  checkFormColors?: { order: number; color: string }[];
 };
 
 function getFloorLabelFromUnitNo(unitNo: string) {
@@ -98,7 +99,13 @@ function hasAnyStatus(u: UnitStatusDetail) {
   );
 }
 
-function UnitCell({ u }: { u: UnitStatusDetail }) {
+function UnitCell({
+  u,
+  colorByOrder,
+}: {
+  u: UnitStatusDetail;
+  colorByOrder: Map<number, string>;
+}) {
   const no = (u.unitNo ?? "").trim();
 
   // ✅ เลขในช่องล่าง
@@ -113,9 +120,15 @@ function UnitCell({ u }: { u: UnitStatusDetail }) {
 
   // ✅ ถ้า "ไม่มี status จริง" → ต้องเป็นขาว (ไม่ทาสี)
   const hasStatus = hasAnyStatus(u);
-  const canPaint = hasStatus && !!u.statusColor && u.statusColor !== "#ffffff";
+  const order = u.maxActiveCheckFormOrder ?? 0;
+  const mappedColor = order > 0 ? colorByOrder.get(order) : undefined;
+  const statusColor =
+    mappedColor && mappedColor !== "#ffffff" ? mappedColor : u.statusColor;
+  const isCompleted = u.maxActiveCheckFormStatus === "COMPLETED";
+  const canPaint =
+    hasStatus && order > 0 && isCompleted && !!statusColor && statusColor !== "#ffffff";
 
-  const bg = canPaint ? u.statusColor : undefined; // undefined => ใช้ bg-white เดิม
+  const bg = canPaint ? statusColor : undefined; // undefined => ใช้ bg-white เดิม
   const textColor =
     canPaint && bg ? (isLight(bg) ? "#0f172a" : "#ffffff") : undefined;
 
@@ -159,8 +172,11 @@ function UnitCell({ u }: { u: UnitStatusDetail }) {
   );
 }
 
-export default function UnitMatrixBoard({ units }: Props) {
+export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
   const buildPhase = units[0]?.buildPhaseName ?? "";
+  const colorByOrder = new Map(
+    (checkFormColors ?? []).map((x) => [x.order, x.color])
+  );
 
   const rows = units.reduce<Record<string, UnitStatusDetail[]>>((acc, u) => {
     const k = getFloorKey(u);
@@ -201,7 +217,11 @@ export default function UnitMatrixBoard({ units }: Props) {
                   <td className="px-4 py-4 border-b border-gray-200">
                     <div className="flex flex-wrap gap-2">
                       {list.map((u) => (
-                        <UnitCell key={u.unitId} u={u} />
+                        <UnitCell
+                          key={u.unitId}
+                          u={u}
+                          colorByOrder={colorByOrder}
+                        />
                       ))}
                     </div>
                   </td>
@@ -214,3 +234,4 @@ export default function UnitMatrixBoard({ units }: Props) {
     </div>
   );
 }
+

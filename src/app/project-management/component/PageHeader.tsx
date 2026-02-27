@@ -26,7 +26,7 @@ export default function PageHeader({
         </Link>
 
         <div className="flex flex-1 justify-center">
-          <h1 className="text-[24px] font-semibold text-slate-900">
+          <h1 className="text-[24px] font-bold text-slate-900">
             {title}
           </h1>
         </div>
