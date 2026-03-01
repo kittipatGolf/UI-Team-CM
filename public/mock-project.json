@@ -11,11 +11,11 @@
             "color": "#BB8FCE",
             "typeChecking": "unit",
             "totalUnits": 89,
-            "notStartedUnits": 81,
-            "inProgressUnits": 0,
+            "notStartedUnits": 80,
+            "inProgressUnits": 1,
             "completedUnits": 8,
             "notApplicableUnits": 0,
-            "progressPercentage": 8.98876404494382
+            "progressPercentage": 10.112359550561797
         },
         {
             "checkFormId": "68ff64e6eda193c889b31770",
@@ -662,9 +662,9 @@
             "statusColor": "#4ade80",
             "overallStatus": "CONDITIONAL_PASS",
             "completedCheckLists": 14,
-            "inProgressCheckForms": 1,
+            "inProgressCheckForms": 2,
             "completedCheckForms": 0,
-            "totalCheckLists": 15,
+            "totalCheckLists": 21,
             "hasDefect": false,
             "typeChecking": "unit"
         },

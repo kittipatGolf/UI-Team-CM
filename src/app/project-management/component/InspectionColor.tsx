@@ -5,6 +5,7 @@ import { fetchProjectSummary } from "../projectService";
 
 type CheckFormItem = {
   order: number;
+  displayOrder?: number;
   checkFormName: string;
   color: string;
 };
@@ -51,7 +52,8 @@ export default function InspectionLegend({
           (a, b) => (a?.order ?? 0) - (b?.order ?? 0)
         );
         const mapped: CheckFormItem[] = sortedApi.map((x, idx) => ({
-          order: idx + 1,
+          order: x?.order ?? idx + 1,
+          displayOrder: idx + 1,
           checkFormName: x?.checkFormName ?? "-",
           color: x?.color ?? "#e5e7eb",
         }));
@@ -80,7 +82,7 @@ export default function InspectionLegend({
       ].join(" ")}
     >
       <div className="flex justify-start gap-3 overflow-x-auto scrollbar-hide">
-        <div className="min-w-[72px] whitespace-pre-line text-sm leading-5 text-slate-700">
+        <div className="whitespace-pre-line text-sm font-medium leading-5 text-gray-500">
           สีแถบ{"\n"}สถานะ:
         </div>
 
@@ -111,10 +113,10 @@ export default function InspectionLegend({
           </div>
 
           {sorted.map((x) => (
-            <div key={x.order} className="flex items-center gap-2">
+            <div key={x.displayOrder ?? x.order} className="flex items-center gap-2">
               <Swatch color={x.color} />
               <span className="text-slate-900">
-                <span className="font-semibold text-gray-600">ใบงานที่ {x.order}</span>{" "}
+                <span className="font-semibold text-gray-600">ใบงานที่ {x.displayOrder ?? x.order}</span>{" "}
                 <span className="text-slate-700">({x.checkFormName})</span>
               </span>
             </div>

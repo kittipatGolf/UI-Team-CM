@@ -2,7 +2,7 @@ import type { UnitStatusDetail } from "../projectService";
 
 type Props = {
   units: UnitStatusDetail[];
-  checkFormColors?: { order: number; color: string }[];
+  checkFormColors?: { order: number; displayOrder?: number; color: string }[];
 };
 
 function getFloorLabelFromUnitNo(unitNo: string) {
@@ -12,7 +12,7 @@ function getFloorLabelFromUnitNo(unitNo: string) {
   if (fl?.[1]) return fl[1];
 
   const m = s.match(/^(\d+)/);
-  if (!m) return "—";
+  if (!m) return "-";
 
   const digits = m[1];
 
@@ -28,23 +28,29 @@ function getFloorLabelFromUnitNo(unitNo: string) {
 }
 
 function getFloorKey(u: UnitStatusDetail) {
+  const floorName = (u.floorBlockName ?? "").trim().toUpperCase();
+  const basementFromName = floorName.match(/\bB(\d+)\b/);
+  if (basementFromName?.[1]) return `B${basementFromName[1]}`;
+
+  const fromUnitNo = getFloorLabelFromUnitNo(u.unitNo).trim();
+  if (fromUnitNo && fromUnitNo !== "-") return fromUnitNo.toUpperCase();
+
   const fb = (u.floorBlockNumber ?? "").trim();
   if (fb) return fb.toUpperCase();
 
-  return getFloorLabelFromUnitNo(u.unitNo);
+  return "-";
 }
 
 function floorLevel(key: string) {
   const s = (key ?? "").trim().toUpperCase();
 
-  // B1, B2 ...
   const b = s.match(/^B(\d+)$/);
   if (b?.[1]) return -parseInt(b[1], 10);
 
   const n = parseInt(s, 10);
   if (!Number.isNaN(n)) return n;
 
-  return -9999; // unknown
+  return -9999;
 }
 
 function isNumericLeading(unitNo: string) {
@@ -87,7 +93,15 @@ function isLight(hex: string) {
   return l > 0.72;
 }
 
-// ✅ ตัวนี้เอาไว้ตัดสินว่า "มีสถานะจริง" ไหม
+function normalizeHex(color?: string | null) {
+  return (color ?? "").trim().toLowerCase();
+}
+
+function isPaintableColor(color?: string | null) {
+  const c = normalizeHex(color);
+  return !!c && c !== "#fff" && c !== "#ffffff";
+}
+
 function hasAnyStatus(u: UnitStatusDetail) {
   return (
     (u.maxActiveCheckFormOrder ?? 0) > 0 ||
@@ -102,39 +116,32 @@ function hasAnyStatus(u: UnitStatusDetail) {
 function UnitCell({
   u,
   colorByOrder,
+  displayOrderByOrder,
 }: {
   u: UnitStatusDetail;
   colorByOrder: Map<number, string>;
+  displayOrderByOrder: Map<number, number>;
 }) {
   const no = (u.unitNo ?? "").trim();
-
-  // ✅ เลขในช่องล่าง
-  const number =
-    (u.maxActiveCheckFormOrder ?? 0) > 0
-      ? u.maxActiveCheckFormOrder
-      : (u.completedCheckForms ?? 0) > 0
-      ? u.completedCheckForms
-      : null;
-
   const showConditionalDot = u.overallStatus === "CONDITIONAL_PASS";
 
-  // ✅ ถ้า "ไม่มี status จริง" → ต้องเป็นขาว (ไม่ทาสี)
   const hasStatus = hasAnyStatus(u);
   const order = u.maxActiveCheckFormOrder ?? 0;
   const mappedColor = order > 0 ? colorByOrder.get(order) : undefined;
-  const statusColor =
-    mappedColor && mappedColor !== "#ffffff" ? mappedColor : u.statusColor;
-  const isCompleted = u.maxActiveCheckFormStatus === "COMPLETED";
-  const canPaint =
-    hasStatus && order > 0 && isCompleted && !!statusColor && statusColor !== "#ffffff";
 
-  const bg = canPaint ? statusColor : undefined; // undefined => ใช้ bg-white เดิม
+  // Paint only colors that come from check form mapping.
+  const bgColor = isPaintableColor(mappedColor) ? mappedColor : undefined;
+  const canPaint = hasStatus && !!bgColor;
+
+  const number = canPaint ? (displayOrderByOrder.get(order) ?? order) : null;
+
+  const bg = canPaint ? bgColor : undefined;
   const textColor =
     canPaint && bg ? (isLight(bg) ? "#0f172a" : "#ffffff") : undefined;
 
   return (
     <div
-      className="relative inline-flex w-fit min-w-[48px] flex-col cursor-pointer rounded-lg border border-gray-300"
+      className="relative inline-flex w-fit min-w-[42px] flex-col cursor-pointer"
       title={[
         `Unit: ${no}`,
         u.buildPhaseName ? `Phase: ${u.buildPhaseName}` : "",
@@ -145,27 +152,24 @@ function UnitCell({
         .filter(Boolean)
         .join("\n")}
     >
-      {showConditionalDot && (
-        <span
-          className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white"
-          style={{ backgroundColor: "#ef4444" }}
-        />
-      )}
-
-      {/* ✅ บน: เทา และ "ไม่มีเส้นขอบ" */}
-      <div className="w-full whitespace-nowrap rounded-t-lg bg-gray-100 px-2 py-1 text-center text-xs font-semibold">
+      <div className="w-full whitespace-nowrap rounded-t-lg border-b border-t border-gray-100 bg-gray-100 px-2 py-1 text-center text-sm font-normal leading-5">
         {no}
       </div>
 
-      {/* ✅ ล่าง: ขาวถ้าไม่มี status / ถ้ามี status ค่อยทาสี */}
       <div
-        className="flex h-7 w-full items-center justify-center rounded-b-lg bg-white text-sm font-semibold"
+        className="relative flex w-full items-center justify-center rounded-b-lg border border-gray-300 bg-white px-2 py-1 text-sm font-semibold leading-4"
         style={
           canPaint
             ? { backgroundColor: bg as string, color: textColor }
             : undefined
         }
       >
+        {showConditionalDot && (
+          <span
+            className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white"
+            style={{ backgroundColor: "#ef4444" }}
+          />
+        )}
         {number ?? "-"}
       </div>
     </div>
@@ -174,9 +178,14 @@ function UnitCell({
 
 export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
   const buildPhase = units[0]?.buildPhaseName ?? "";
-  const colorByOrder = new Map(
-    (checkFormColors ?? []).map((x) => [x.order, x.color])
-  );
+
+  const colorByOrder = new Map<number, string>();
+  const displayOrderByOrder = new Map<number, number>();
+
+  for (const item of checkFormColors ?? []) {
+    colorByOrder.set(item.order, item.color);
+    displayOrderByOrder.set(item.order, item.displayOrder ?? item.order);
+  }
 
   const rows = units.reduce<Record<string, UnitStatusDetail[]>>((acc, u) => {
     const k = getFloorKey(u);
@@ -184,7 +193,6 @@ export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
     return acc;
   }, {});
 
-  // ✅ sort ชั้น: 8..1..B1..B2
   const floorKeys = Object.keys(rows).sort((a, b) => {
     const la = floorLevel(a);
     const lb = floorLevel(b);
@@ -195,9 +203,7 @@ export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
   return (
     <div className="w-full">
       {buildPhase && (
-        <div className="mb-2 text-base font-bold text-gray-500">
-          {buildPhase}
-        </div>
+        <div className="mb-2 text-base font-bold text-gray-500">{buildPhase}</div>
       )}
 
       <div className="w-full overflow-x-auto rounded-lg bg-white overflow-hidden">
@@ -214,13 +220,14 @@ export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
                     {fk}
                   </td>
 
-                  <td className="px-4 py-4 border-b border-gray-200">
-                    <div className="flex flex-wrap gap-2">
+                  <td className="border-b border-gray-200 text-center py-4 px-4">
+                    <div className="flex flex-wrap gap-2 px-4">
                       {list.map((u) => (
                         <UnitCell
                           key={u.unitId}
                           u={u}
                           colorByOrder={colorByOrder}
+                          displayOrderByOrder={displayOrderByOrder}
                         />
                       ))}
                     </div>
@@ -234,4 +241,3 @@ export default function UnitMatrixBoard({ units, checkFormColors }: Props) {
     </div>
   );
 }
-

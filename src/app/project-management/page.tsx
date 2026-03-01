@@ -33,7 +33,8 @@ export default function Page() {
     if (!data?.checkFormSummary?.length) return [];
     const sorted = [...data.checkFormSummary].sort((a, b) => a.order - b.order);
     return sorted.map((x, idx) => ({
-      order: idx + 1,
+      order: x.order,
+      displayOrder: idx + 1,
       checkFormName: x.checkFormName,
       color: x.color,
     }));
