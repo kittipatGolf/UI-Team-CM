@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import NavLinkItem from "./NavLinkItem";
 
 type NavItem = { label: string; href: string };
 
@@ -181,18 +182,14 @@ export default function AppNavbar({
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href);
               return (
-                <Link
+                <NavLinkItem
                   key={item.href}
                   href={item.href}
-                  className={[
-                    "flex h-10 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-[16px] font-medium transition",
-                    active
-                      ? "bg-[#184777] text-white"
-                      : "text-slate-900 hover:bg-[#184777] hover:text-white",
-                  ].join(" ")}
+                  active={active}
+                  className="text-[16px] font-medium"
                 >
                   {item.label}
-                </Link>
+                </NavLinkItem>
               );
             })}
           </div>

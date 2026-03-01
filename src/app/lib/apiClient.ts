@@ -24,6 +24,14 @@ async function parseJsonSafe(res: Response) {
   }
 }
 
+function getErrorMessage(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  if (!("message" in body)) return undefined;
+
+  const message = (body as { message?: unknown }).message;
+  return typeof message === "string" ? message : undefined;
+}
+
 export async function apiFetch<T>(url: string, options?: RequestOptions): Promise<T> {
   const res = await fetch(url, {
     ...options,
@@ -36,7 +44,7 @@ export async function apiFetch<T>(url: string, options?: RequestOptions): Promis
   if (!res.ok) {
     const body = await parseJsonSafe(res);
     throw new ApiError(
-      (body as any)?.message || `Request failed: ${res.status}`,
+      getErrorMessage(body) ?? `Request failed: ${res.status}`,
       res.status,
       body
     );

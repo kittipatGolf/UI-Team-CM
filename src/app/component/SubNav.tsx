@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   HomeIcon,
@@ -9,6 +8,7 @@ import {
   Squares2X2Icon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
+import NavLinkItem from "./NavLinkItem";
 
 type Item = {
   label: string;
@@ -65,19 +65,15 @@ export default function ProjectManagementSubNav({ className, style }: Props) {
         const active = isActive(item.href);
 
         return (
-          <Link
+          <NavLinkItem
             key={item.href}
             href={item.href}
-            className={[
-              "flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 font-normal transition",
-              active
-                ? "bg-[#184777] text-white"
-                : "text-slate-900 hover:bg-[#184777] hover:text-white",
-            ].join(" ")}
+            active={active}
+            className="gap-2 font-normal"
           >
             <span className="shrink-0">{item.icon}</span>
             <span className="text-center leading-none">{item.label}</span>
-          </Link>
+          </NavLinkItem>
         );
       })}
     </div>
